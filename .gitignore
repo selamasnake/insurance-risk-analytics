@@ -5,8 +5,7 @@ __pycache__/
 *.ipynb_checkpoints/
 
 # Data
-data/
-*.csv
+data/*.txt
 
 # VSCode
 .vscode/
@@ -17,3 +16,7 @@ data/
 .DS_Store
 
 .devcontainer/
+
+.dvc/cache
+!.dvc/
+
