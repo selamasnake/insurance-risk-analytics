@@ -6,6 +6,7 @@ __pycache__/
 
 # Data
 data/*.txt
+data/processed/*.txt
 
 # VSCode
 .vscode/
