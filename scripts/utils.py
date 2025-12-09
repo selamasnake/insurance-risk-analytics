@@ -18,10 +18,10 @@ class DataLoader:
         self.df = pd.read_csv(file_path, sep='|', low_memory=False)
         return self.df
 
-    def save_data(self, output_path):
+    def save_data(self, output_path, sep=None):
         """Save current DataFrame to CSV"""
+        self.sep = sep
         if self.df is None:
             raise ValueError("No data loaded to save.")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        self.df.to_csv(output_path, index=False)
-        
+        self.df.to_csv(output_path, sep='|', index=False)
