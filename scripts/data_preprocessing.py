@@ -105,21 +105,44 @@ class PreprocessData:
         return missing_df.sort_values(by="MissingPercent", ascending=False)
 
     def handle_missing_values(self, data):
-
-        # Drop columns with >99% missing values
-        drop_cols = ['NumberOfVehiclesInFleet', 'CrossBorder']
-        data = data.drop(columns=[col for col in drop_cols if col in data.columns])
-
-        # # Replace 0s in CustomValueEstimate with NaN
-        # if 'CustomValueEstimate' in data.columns:
-        #     data['CustomValueEstimate'] = data['CustomValueEstimate'].replace(0, np.nan)
-
-        # Fill high-risk vehicle flags with 'No'
+        """
+        Performs comprehensive missing value cleaning, including previously remaining columns.
+        """
+        
+        #  Drop columns with >99% missing values 
+        drop_cols = ['NumberOfVehiclesInFleet', 'CrossBorder', 'CustomValueEstimate']
+        data = data.drop(columns=[col for col in drop_cols if col in data.columns], errors='ignore')
+        
+        #  Fill high-risk vehicle flags with 'No' and add missing flags
         risk_flags = ['WrittenOff', 'Rebuilt', 'Converted']
         for col in risk_flags:
             if col in data.columns:
+                data[col+'_missing_flag'] = data[col].isna().astype(int)  # Optional predictive flag
                 data[col] = data[col].fillna('No')
-
+        
+        #  Fill moderate-missing categorical columns with 'Missing' or mode 
+        cat_to_impute = ['NewVehicle', 'Bank', 'AccountType', 'Gender', 'MaritalStatus',
+                        'mmcode', 'VehicleType', 'make', 'Model', 'bodytype']
+        for col in cat_to_impute:
+            if col in data.columns:
+                if data[col].dtype.name == 'category':
+                    if 'Missing' not in data[col].cat.categories:
+                        data[col] = data[col].cat.add_categories('Missing')
+                if data[col].dtype.name in ['category', 'object']:
+                    data[col] = data[col].fillna('Missing')
+                else:
+                    data[col] = data[col].fillna(data[col].mode()[0])
+        
+        #  Fill numeric columns with median 
+        num_to_impute = ['CapitalOutstanding', 'Cylinders', 'cubiccapacity', 'kilowatts', 'NumberOfDoors']
+        for col in num_to_impute:
+            if col in data.columns:
+                data[col] = data[col].fillna(data[col].median())
+        
+        #  Handle remaining date columns 
+        if 'VehicleIntroDate' in data.columns:
+            # Drop if age is already calculated; otherwise, fill with fallback
+            data = data.drop(columns=['VehicleIntroDate'], errors='ignore')
+        
         return data
-
 
